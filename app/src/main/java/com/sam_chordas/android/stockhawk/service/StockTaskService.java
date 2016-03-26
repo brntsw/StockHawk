@@ -12,18 +12,21 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
+import com.sam_chordas.android.stockhawk.bus_events.SymbolEvent;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import com.sam_chordas.android.stockhawk.rest.DisplayToast;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import com.squareup.otto.Bus;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 /**
  * Created by sam_chordas on 9/30/15.
@@ -33,10 +36,11 @@ import java.util.ArrayList;
 public class StockTaskService extends GcmTaskService{
   private String LOG_TAG = StockTaskService.class.getSimpleName();
 
-  private OkHttpClient client = new OkHttpClient();
-  private Context mContext;
-  private StringBuilder mStoredSymbols = new StringBuilder();
-  private boolean isUpdate;
+    private OkHttpClient client = new OkHttpClient();
+    private Context mContext;
+    private StringBuilder mStoredSymbols = new StringBuilder();
+    private boolean isUpdate;
+    @Inject Bus mBus;
 
   public StockTaskService(){}
 
@@ -58,6 +62,7 @@ public class StockTaskService extends GcmTaskService{
     if (mContext == null){
       mContext = this;
     }
+
     StringBuilder urlStringBuilder = new StringBuilder();
     try{
       // Base URL for the Yahoo query
@@ -114,46 +119,54 @@ public class StockTaskService extends GcmTaskService{
     String getResponse;
     int result = GcmNetworkManager.RESULT_FAILURE;
 
-    if (urlStringBuilder != null){
-      urlString = urlStringBuilder.toString();
-      try{
-        getResponse = fetchData(urlString);
-        result = GcmNetworkManager.RESULT_SUCCESS;
-        try {
-          ContentValues contentValues = new ContentValues();
-          // update ISCURRENT to 0 (false) so new data is current
-          if (isUpdate){
-            contentValues.put(QuoteColumns.ISCURRENT, 0);
-            mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
-                null, null);
+      if (urlStringBuilder != null){
+          urlString = urlStringBuilder.toString();
+          try{
+              getResponse = fetchData(urlString);
+
+              //Checks if there were any problems with the server
+              if (getResponse.startsWith("{\"error\":{")) {
+                  throw new IllegalStateException("A problem occurred with the server");
+              }
+
+              result = GcmNetworkManager.RESULT_SUCCESS;
+              try {
+                  ContentValues contentValues = new ContentValues();
+                  // update ISCURRENT to 0 (false) so new data is current
+                  if (isUpdate){
+                      contentValues.put(QuoteColumns.ISCURRENT, 0);
+                      mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
+                          null, null);
+                  }
+
+                  ArrayList<ContentProviderOperation> batchOperations = null;
+
+                  try {
+                      batchOperations = Utils.quoteJsonToContentVals(getResponse);
+                  }
+                  catch(Exception e){
+                      Log.e("Error", "Error inserting the stock");
+                      mBus.post(new SymbolEvent(SymbolEvent.STATE.FAILURE));
+                  }
+                  finally {
+                      if(batchOperations != null){
+                          mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY, batchOperations);
+                      }
+                      else{
+                          Log.d("Stock", "The stock does not exist");
+                      }
+                  }
+
+              }catch (RemoteException | OperationApplicationException e){
+                  Log.e(LOG_TAG, "Error applying batch insert", e);
+              }
+          } catch (IOException e){
+              e.printStackTrace();
           }
 
-          ArrayList<ContentProviderOperation> batchOperations = null;
-
-          try {
-            batchOperations = Utils.quoteJsonToContentVals(getResponse);
-          }
-          catch(Exception e){
-              new DisplayToast(mContext, "The stock does not exist");
-          }
-          finally {
-            if(batchOperations != null){
-                mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY, batchOperations);
-            }
-            else{
-                new DisplayToast(mContext, "The stock does not exist");
-            }
-          }
-
-        }catch (RemoteException | OperationApplicationException e){
-          Log.e(LOG_TAG, "Error applying batch insert", e);
-        }
-      } catch (IOException e){
-        e.printStackTrace();
       }
-    }
 
-    return result;
+      return result;
   }
 
 }

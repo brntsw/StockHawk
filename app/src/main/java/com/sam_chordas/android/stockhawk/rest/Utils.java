@@ -23,12 +23,15 @@ public class Utils {
 
   public static ArrayList quoteJsonToContentVals(String JSON){
     ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
-    JSONObject jsonObject = null;
-    JSONArray resultsArray = null;
+
+    JSONObject jsonObject;
+    JSONArray resultsArray;
+
     Log.i(LOG_TAG, "GET FB: " +JSON);
+
     try{
       jsonObject = new JSONObject(JSON);
-      if (jsonObject != null && jsonObject.length() != 0){
+      if (jsonObject.length() != 0){
         jsonObject = jsonObject.getJSONObject("query");
         int count = Integer.parseInt(jsonObject.getString("count"));
         if (count == 1){

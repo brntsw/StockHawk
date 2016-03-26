@@ -9,18 +9,20 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -29,6 +31,8 @@ import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.bus_events.ServerDownEvent;
+import com.sam_chordas.android.stockhawk.bus_events.SymbolEvent;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
@@ -37,6 +41,7 @@ import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
+import com.squareup.otto.Subscribe;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
 
@@ -55,6 +60,11 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private Context mContext;
   private Cursor mCursor;
   boolean isConnected;
+  private EmptyRecyclerView mRecyclerView;
+  private LinearLayout mEmptyLayout;
+  private TextView mEmptyView;
+  private TextView mServerDownText;
+  private ImageView mServerDownImage;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -79,24 +89,33 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         networkToast();
       }
     }
-    RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-    recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    mRecyclerView = (EmptyRecyclerView) findViewById(R.id.recycler_view);
+    mEmptyLayout = (LinearLayout) findViewById(R.id.empty_layout);
+    mEmptyView = (TextView) findViewById(R.id.empty_text);
+    mServerDownText = (TextView) findViewById(R.id.server_down_text);
+    mServerDownImage = (ImageView) findViewById(R.id.server_down_image);
+
+    mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
     mCursorAdapter = new QuoteCursorAdapter(this, null);
-    recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
+    mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
             new RecyclerViewItemClickListener.OnItemClickListener() {
               @Override public void onItemClick(View v, int position) {
-                //TODO:
-                // go to another activity that has the graph WilliamChart showing the clicked item info
-                Toast.makeText(MyStocksActivity.this, "Clicked", Toast.LENGTH_SHORT).show();
+                mCursor.moveToPosition(position);
+                String symbol = mCursor.getString(mCursor.getColumnIndex("symbol"));
+
+                //Intent intent = new Intent(mContext, Graph.class);
+                //startActivity(intent);
               }
             }));
-    recyclerView.setAdapter(mCursorAdapter);
+    mRecyclerView.setAdapter(mCursorAdapter);
+    mRecyclerView.setEmptyView(mEmptyLayout);
 
 
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-    fab.attachToRecyclerView(recyclerView);
+    fab.attachToRecyclerView(mRecyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
         if (isConnected){
@@ -104,26 +123,30 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
               .content(R.string.content_test)
               .inputType(InputType.TYPE_CLASS_TEXT)
               .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                @Override public void onInput(MaterialDialog dialog, CharSequence input) {
+                @Override public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                   // On FAB click, receive user input. Make sure the stock doesn't already exist
                   // in the DB and proceed accordingly
                   if(input.length() == 0){
                     Toast.makeText(MyStocksActivity.this, "Type some stock!", Toast.LENGTH_LONG).show();
                   }
+
+                  String symbol = input.toString().toUpperCase();
+
                   Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
                       new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
-                      new String[] { input.toString() }, null);
+                      new String[] { symbol }, null);
+
                   if (c != null && c.getCount() != 0) {
                     Toast toast =
                         Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                     toast.show();
-                    return;
+                    c.close();
                   } else {
                     // Add the stock to DB
                     mServiceIntent.putExtra("tag", "add");
-                    mServiceIntent.putExtra("symbol", input.toString());
+                    mServiceIntent.putExtra("symbol", symbol);
                     startService(mServiceIntent);
                   }
                 }
@@ -138,7 +161,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mCursorAdapter);
     mItemTouchHelper = new ItemTouchHelper(callback);
-    mItemTouchHelper.attachToRecyclerView(recyclerView);
+    mItemTouchHelper.attachToRecyclerView(mRecyclerView);
 
     mTitle = getTitle();
     if (isConnected){
@@ -175,6 +198,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
   public void restoreActionBar() {
     ActionBar actionBar = getSupportActionBar();
+    assert actionBar != null;
     actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
     actionBar.setDisplayShowTitleEnabled(true);
     actionBar.setTitle(mTitle);
@@ -185,6 +209,18 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       getMenuInflater().inflate(R.menu.my_stocks, menu);
       restoreActionBar();
       return true;
+  }
+
+  @Subscribe
+  public void onServerDownEvent(ServerDownEvent e) {
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        mEmptyView.setVisibility(View.GONE);
+        mServerDownImage.setVisibility(View.VISIBLE);
+        mServerDownText.setVisibility(View.VISIBLE);
+      }
+    });
   }
 
   @Override
@@ -208,6 +244,21 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     return super.onOptionsItemSelected(item);
   }
 
+  @Subscribe
+  public void onSymbolEvent(SymbolEvent e) {
+    if (e.state == SymbolEvent.STATE.FAILURE) {
+      Log.i("MainActivity", "Symbol not found");
+
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          Toast.makeText(mContext, getString(R.string.symbol_not_found), Toast.LENGTH_LONG).show();
+        }
+      });
+
+    }
+  }
+
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args){
     // This narrows the return to only the stocks that are most current.
@@ -228,15 +279,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   @Override
   public void onLoaderReset(Loader<Cursor> loader){
     mCursorAdapter.swapCursor(null);
-  }
-
-  public void showMessage(final String message){
-    new Handler(Looper.getMainLooper()).post(new Runnable() {
-      @Override
-      public void run() {
-        Toast.makeText(MyStocksActivity.this, message, Toast.LENGTH_LONG).show();
-      }
-    });
   }
 
 }
