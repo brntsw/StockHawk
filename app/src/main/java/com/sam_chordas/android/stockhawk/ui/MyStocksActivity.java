@@ -66,6 +66,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private TextView mServerDownText;
   private ImageView mServerDownImage;
 
+  public static final String TAG_SYMBOL = "symbol";
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -106,8 +108,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 mCursor.moveToPosition(position);
                 String symbol = mCursor.getString(mCursor.getColumnIndex("symbol"));
 
-                //Intent intent = new Intent(mContext, Graph.class);
-                //startActivity(intent);
+                Intent intent = new Intent(mContext, GraphStockActivity.class);
+                intent.putExtra(TAG_SYMBOL, symbol);
+                startActivity(intent);
               }
             }));
     mRecyclerView.setAdapter(mCursorAdapter);
