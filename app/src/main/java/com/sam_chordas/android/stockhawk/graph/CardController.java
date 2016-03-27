@@ -50,6 +50,9 @@ public class CardController {
         mPlayBtn = (ImageButton) toolbar.findViewById(R.id.play);
         mUpdateBtn = (ImageButton) toolbar.findViewById(R.id.update);
 
+        mPlayBtn.setVisibility(View.GONE);
+        mUpdateBtn.setVisibility(View.GONE);
+
         mPlayBtn.setOnClickListener(new View.OnClickListener() {
 
             @Override

@@ -15,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -66,7 +65,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private TextView mServerDownText;
   private ImageView mServerDownImage;
 
+  public static final String CLASS_NAME = MyStocksActivity.class.getName();
+
   public static final String TAG_SYMBOL = "symbol";
+  public static final String TAG = "tag";
+  public static final String ADD = "add";
+  public static final String INIT = "init";
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +88,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     mServiceIntent = new Intent(this, StockIntentService.class);
     if (savedInstanceState == null){
       // Run the initialize task service so that some stocks appear upon an empty database
-      mServiceIntent.putExtra("tag", "init");
+      mServiceIntent.putExtra(TAG, INIT);
       if (isConnected){
         startService(mServiceIntent);
       } else{
@@ -130,7 +134,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                   // On FAB click, receive user input. Make sure the stock doesn't already exist
                   // in the DB and proceed accordingly
                   if(input.length() == 0){
-                    Toast.makeText(MyStocksActivity.this, "Type some stock!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MyStocksActivity.this, getResources().getString(R.string.type_stock), Toast.LENGTH_LONG).show();
                   }
 
                   String symbol = input.toString().toUpperCase();
@@ -141,15 +145,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
                   if (c != null && c.getCount() != 0) {
                     Toast toast =
-                        Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+                        Toast.makeText(MyStocksActivity.this, getResources().getString(R.string.stock_already_saved),
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                     toast.show();
                     c.close();
                   } else {
                     // Add the stock to DB
-                    mServiceIntent.putExtra("tag", "add");
-                    mServiceIntent.putExtra("symbol", symbol);
+                    mServiceIntent.putExtra(TAG, ADD);
+                    mServiceIntent.putExtra(TAG_SYMBOL, symbol);
                     startService(mServiceIntent);
                   }
                 }
@@ -250,8 +254,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   @Subscribe
   public void onSymbolEvent(SymbolEvent e) {
     if (e.state == SymbolEvent.STATE.FAILURE) {
-      Log.i("MainActivity", "Symbol not found");
-
       runOnUiThread(new Runnable() {
         @Override
         public void run() {

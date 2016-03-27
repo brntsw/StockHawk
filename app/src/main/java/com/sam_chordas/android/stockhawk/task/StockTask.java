@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.RelativeLayout;
 
+import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.graph.GraphStock;
 import com.sam_chordas.android.stockhawk.model.Stock;
 import com.squareup.okhttp.OkHttpClient;
@@ -37,7 +38,7 @@ public class StockTask extends AsyncTask<String, Void, List<Stock>> {
 
     protected void onPreExecute(){
         progress = new ProgressDialog(context);
-        progress.setMessage("Loading graph...");
+        progress.setMessage(context.getResources().getString(R.string.loading_graph));
         progress.show();
     }
 

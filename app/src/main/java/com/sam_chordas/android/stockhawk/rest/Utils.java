@@ -174,25 +174,25 @@ public class Utils {
 
     switch (dayOfTheWeek) {
       case Calendar.MONDAY:
-        dayString = context.getString(R.string.mon_short);
+        dayString = context.getString(R.string.monday_short);
         break;
       case Calendar.TUESDAY:
-        dayString = context.getString(R.string.tue_short);
+        dayString = context.getString(R.string.tuesday_short);
         break;
       case Calendar.WEDNESDAY:
-        dayString = context.getString(R.string.wed_short);
+        dayString = context.getString(R.string.wednesday_short);
         break;
       case Calendar.THURSDAY:
-        dayString = context.getString(R.string.thu_short);
+        dayString = context.getString(R.string.thursday_short);
         break;
       case Calendar.FRIDAY:
-        dayString = context.getString(R.string.fri_short);
+        dayString = context.getString(R.string.friday_short);
         break;
       case Calendar.SATURDAY:
-        dayString = context.getString(R.string.sat_short);
+        dayString = context.getString(R.string.saturday_short);
         break;
       case Calendar.SUNDAY:
-        dayString = context.getString(R.string.sun_short);
+        dayString = context.getString(R.string.sunday_short);
         break;
     }
 

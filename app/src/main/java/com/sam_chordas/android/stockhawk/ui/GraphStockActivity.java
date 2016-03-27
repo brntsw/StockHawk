@@ -20,6 +20,8 @@ import java.util.concurrent.ExecutionException;
  */
 public class GraphStockActivity extends Activity {
 
+    private final static String STOCKS = "stocks";
+
     private List<Stock> listStocks;
 
     public void onCreate(Bundle savedInstanceState){
@@ -29,7 +31,6 @@ public class GraphStockActivity extends Activity {
 
         Bundle bundle = getIntent().getExtras();
         String symbol = bundle.getString(MyStocksActivity.TAG_SYMBOL);
-        //(new GraphStock((RelativeLayout) findViewById(R.id.relativeGraph), this)).init();
 
         if(savedInstanceState == null){
             RelativeLayout relativeGraph = (RelativeLayout) findViewById(R.id.relativeGraph);
@@ -46,17 +47,16 @@ public class GraphStockActivity extends Activity {
 
             RelativeLayout relativeGraph = (RelativeLayout) findViewById(R.id.relativeGraph);
             if(listStocks != null && listStocks.size() > 0){
-                //Passa como parâmetro
                 (new GraphStock(relativeGraph, listStocks, GraphStockActivity.this)).init();
             }
             else{
-                Toast.makeText(GraphStockActivity.this, "No results to the selected stock", Toast.LENGTH_LONG).show();
+                Toast.makeText(GraphStockActivity.this, getResources().getString(R.string.no_results_selected_stock), Toast.LENGTH_LONG).show();
             }
         }
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState){
-        savedInstanceState.putParcelableArrayList("stocks", (ArrayList<? extends Parcelable>) listStocks);
+        savedInstanceState.putParcelableArrayList(STOCKS, (ArrayList<? extends Parcelable>) listStocks);
 
         super.onSaveInstanceState(savedInstanceState);
     }

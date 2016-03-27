@@ -34,11 +34,6 @@ public class GraphStock extends CardController {
     private final Context mContext;
     private List<Stock> mListStocks;
 
-
-    private final String[] mLabels= {"Jan", "Fev", "Mar", "Apr", "Jun", "May", "Jul", "Aug", "Sep"};
-    private final float[][] mValues = {{3.5f, 4.7f, 4.3f, 8f, 6.5f, 9.9f, 7f, 8.3f, 7.0f},
-            {4.5f, 2.5f, 2.5f, 9f, 4.5f, 9.5f, 5f, 8.3f, 1.8f}};
-
     private Tooltip mTip;
 
     private Runnable mBaseAction;
@@ -73,9 +68,6 @@ public class GraphStock extends CardController {
         // Tooltip
         mTip = new Tooltip(mContext, R.layout.linechart_three_tooltip, R.id.value);
 
-        /*((TextView) mTip.findViewById(R.id.value))
-                .setTypeface(Typeface.createFromAsset(mContext.getAssets(), "OpenSans-Semibold.ttf"));*/
-
         mTip.setVerticalAlignment(Tooltip.Alignment.BOTTOM_TOP);
         mTip.setDimensions((int) Tools.fromDpToPx(65), (int) Tools.fromDpToPx(25));
 
@@ -95,8 +87,8 @@ public class GraphStock extends CardController {
 
         mChart.setTooltips(mTip);
 
-        mChart.setAxisColor(Color.parseColor("#ffffff"))
-                .setLabelsColor(Color.parseColor("#ffffff"));
+        mChart.setAxisColor(Color.WHITE)
+                .setLabelsColor(Color.WHITE);
 
         Paint paint = new Paint();
         paint.setColor(Color.GRAY);
