@@ -3,18 +3,26 @@ package com.sam_chordas.android.stockhawk.graph;
 import android.animation.PropertyValuesHolder;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.view.View;
 import android.widget.RelativeLayout;
 
 import com.db.chart.Tools;
 import com.db.chart.model.LineSet;
-import com.db.chart.view.AxisController;
+import com.db.chart.view.ChartView;
 import com.db.chart.view.LineChartView;
 import com.db.chart.view.Tooltip;
 import com.db.chart.view.animation.Animation;
-import com.db.chart.view.animation.easing.BounceEase;
+import com.db.chart.view.animation.easing.CubicEase;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.model.Stock;
+import com.sam_chordas.android.stockhawk.rest.Utils;
+
+import java.util.List;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * Created by Bruno on 26/03/2016.
@@ -23,9 +31,8 @@ public class GraphStock extends CardController {
 
 
     private final LineChartView mChart;
-
-
     private final Context mContext;
+    private List<Stock> mListStocks;
 
 
     private final String[] mLabels= {"Jan", "Fev", "Mar", "Apr", "Jun", "May", "Jul", "Aug", "Sep"};
@@ -37,17 +44,31 @@ public class GraphStock extends CardController {
     private Runnable mBaseAction;
 
 
-    public GraphStock(RelativeLayout relativeGraph, Context context){
+    public GraphStock(RelativeLayout relativeGraph, List<Stock> listStocks, Context context){
         super(relativeGraph);
 
         mContext = context;
         mChart = (LineChartView) relativeGraph.findViewById(R.id.chart1);
+        mListStocks = listStocks;
     }
 
 
     @Override
     public void show(Runnable action) {
         super.show(action);
+
+        int dataSize = mListStocks.size();
+
+        String[] labels = new String[dataSize];
+        final float[] values = new float[dataSize];
+
+        for(int i = 0; i < dataSize; i++){
+            labels[i] = Utils.convertDateToWeekday(mListStocks.get(i).getDate(), mContext);
+            values[i] = mListStocks.get(i).getCloseValue();
+        }
+
+        // Data
+        LineSet dataset = new LineSet(labels, values);
 
         // Tooltip
         mTip = new Tooltip(mContext, R.layout.linechart_three_tooltip, R.id.value);
@@ -74,45 +95,49 @@ public class GraphStock extends CardController {
 
         mChart.setTooltips(mTip);
 
-        // Data
-        LineSet dataset = new LineSet(mLabels, mValues[0]);
+        mChart.setAxisColor(Color.parseColor("#ffffff"))
+                .setLabelsColor(Color.parseColor("#ffffff"));
+
+        Paint paint = new Paint();
+        paint.setColor(Color.GRAY);
+
+        mChart.setGrid(ChartView.GridType.VERTICAL, 2, mListStocks.size(), paint);
+
         dataset.setColor(Color.parseColor("#758cbb"))
-                .setFill(Color.parseColor("#2d374c"))
-                .setDotsColor(Color.parseColor("#758cbb"))
-                .setThickness(4)
-                .setDashed(new float[]{10f,10f})
-                .beginAt(5);
+                .setDotsRadius(Tools.fromDpToPx(4))
+                .setDotsStrokeThickness(Tools.fromDpToPx(3))
+                .setDotsStrokeColor(Color.YELLOW)
+                .setThickness(10);
+
         mChart.addData(dataset);
-
-        dataset = new LineSet(mLabels, mValues[0]);
-        dataset.setColor(Color.parseColor("#b3b5bb"))
-                .setFill(Color.parseColor("#2d374c"))
-                .setDotsColor(Color.parseColor("#ffc755"))
-                .setThickness(4)
-                .endAt(6);
-        mChart.addData(dataset);
-
-        // Chart
-        mChart.setBorderSpacing(Tools.fromDpToPx(15))
-                .setAxisBorderValues(0, 20)
-                .setYLabels(AxisController.LabelPosition.NONE)
-                .setLabelsColor(Color.parseColor("#6a84c3"))
-                .setXAxis(false)
-                .setYAxis(false);
-
-        mBaseAction = action;
-        Runnable chartAction = new Runnable() {
-            @Override
-            public void run() {
-                mBaseAction.run();
-                mTip.prepare(mChart.getEntriesArea(0).get(3), mValues[0][3]);
-                mChart.showTooltip(mTip, true);
-            }
-        };
 
         Animation anim = new Animation()
-                .setEasing(new BounceEase())
-                .setEndAction(chartAction);
+                .setEasing(new CubicEase()
+                );
+
+        StringBuilder descriptionBuilder = new StringBuilder();
+
+        float minValue = Float.MAX_VALUE, maxValue = Float.MIN_VALUE, value;
+
+        for (int i = 0; i < dataSize; ++i) {
+            value = dataset.getValue(i);
+
+            minValue = min(minValue, value);
+            maxValue = max(maxValue, value);
+
+            descriptionBuilder.append(dataset.getLabel(i))
+                    .append(": ")
+                    .append(value);
+        }
+
+        mChart.setContentDescription(descriptionBuilder.toString());
+
+        int maxRoundUp = Utils.roundToNextTen((int) maxValue, true);
+        int minRoundDown = Utils.roundToNextTen((int) minValue, false);
+
+        mChart.setAxisBorderValues(minRoundDown,
+                maxRoundUp,
+                (maxRoundUp - minRoundDown) / 5);
 
         mChart.show(anim);
     }

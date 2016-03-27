@@ -18,4 +18,12 @@
     <string name="symbol_not_found">The symbol was not found!</string>
     <string name="signal_wireless">Image of a wireless signal</string>
     <string name="graph_label">Stock graph</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="mon_short">Mon</string>
+    <string name="tue_short">Tue</string>
+    <string name="wed_short">Wed</string>
+    <string name="thu_short">Thu</string>
+    <string name="fri_short">Fri</string>
+    <string name="sat_short">Sat</string>
+    <string name="sun_short">Sun</string>
 </resources>
