@@ -20,6 +20,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.otto.Bus;
+import com.squareup.otto.ThreadEnforcer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -78,7 +79,7 @@ public class StockTaskService extends GcmTaskService{
       initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
           new String[] { "Distinct " + QuoteColumns.SYMBOL }, null,
           null, null);
-      if (initQueryCursor.getCount() == 0 || initQueryCursor == null){
+      if (initQueryCursor == null || initQueryCursor.getCount() == 0){
         // Init task. Populates DB with quotes for the symbols seen below
         try {
           urlStringBuilder.append(
@@ -146,6 +147,7 @@ public class StockTaskService extends GcmTaskService{
                   }
                   catch(Exception e){
                       Log.e("Error", "Error inserting the stock");
+                      mBus = new Bus(ThreadEnforcer.ANY);
                       mBus.post(new SymbolEvent(SymbolEvent.STATE.FAILURE));
                   }
                   finally {

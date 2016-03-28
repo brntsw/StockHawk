@@ -1,8 +1,8 @@
 package com.sam_chordas.android.stockhawk.ui;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by Bruno on 26/03/2016.
  */
-public class GraphStockActivity extends Activity {
+public class GraphStockActivity extends AppCompatActivity {
 
     private final static String STOCKS = "stocks";
 

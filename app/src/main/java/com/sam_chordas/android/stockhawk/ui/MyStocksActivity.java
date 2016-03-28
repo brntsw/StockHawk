@@ -286,4 +286,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     mCursorAdapter.swapCursor(null);
   }
 
+  public Context getStocksContext(){
+    return MyStocksActivity.this;
+  }
+
 }

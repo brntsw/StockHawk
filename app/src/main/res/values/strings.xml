@@ -3,6 +3,7 @@
     <string name="graph_activity">Stock graph</string>
 
     <string name="action_example">Example action</string>
+    <string name="input_prefill"></string>
     <string name="illegal_cursor">This should only be called when Cursor is valid</string>
     <string name="date_format_null" translatable="false">dateFormat is null</string>
     <string name="stock_intent" translatable="false">Stock Intent Service</string>
@@ -31,4 +32,6 @@
     <string name="friday_short">Fri</string>
     <string name="saturday_short">Sat</string>
     <string name="sunday_short">Sun</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>
