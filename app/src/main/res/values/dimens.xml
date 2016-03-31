@@ -3,6 +3,27 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <!-- Widget spacing -->
+    <dimen name="widget_padding">16dp</dimen>
+    <dimen name="widget_medium_margin">5dp</dimen>
+    <dimen name="dimen_textview_big_margin">10sp</dimen>
+    <dimen name="dimen_textview_small_margin">3dp</dimen>
+    <dimen name="dimen_zero">0dp</dimen>
+    <dimen name="widget_image_size">32dp</dimen>
+
+    <!-- LineChartView -->
+    <dimen name="linechart_small_margin">15dp</dimen>
+    <dimen name="linechart_big_margin">20dp</dimen>
+
+    <!-- CardView -->
+    <dimen name="card_image_margin">5dp</dimen>
+
+    <!-- FloatingActionButton -->
+    <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="wireless_image_width">200dp</dimen>
+    <dimen name="wireless_image_height">217dp</dimen>
+
     <!-- Per the design guidelines, navigation drawers should be between 240dp and 320dp:
          https://developer.android.com/design/patterns/navigation-drawer.html -->
     <dimen name="navigation_drawer_width">240dp</dimen>

@@ -16,8 +16,8 @@
       android:id="@+id/fab"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_gravity="bottom|right"
-      android:layout_margin="16dp"
+      android:layout_gravity="bottom|end"
+      android:layout_margin="@dimen/fab_margin"
       android:src="@drawable/ic_add_white_24dp"
       android:contentDescription="@string/float_button"
       fab:fab_colorNormal="@color/material_blue_500"
@@ -45,8 +45,8 @@
 
         <ImageView
             android:id="@+id/server_down_image"
-            android:layout_width="200dp"
-            android:layout_height="217dp"
+            android:layout_width="@dimen/wireless_image_width"
+            android:layout_height="@dimen/wireless_image_height"
             android:src="@drawable/wireless"
             android:contentDescription="@string/signal_wireless"
             android:layout_gravity="center_horizontal"
